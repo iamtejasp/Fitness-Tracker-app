@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { ChatBubble } from '@/components/ChatBubble';
@@ -7,10 +8,14 @@ import { Screen } from '@/components/Screen';
 import { TextField } from '@/components/TextField';
 import { colors } from '@/constants/theme';
 import { chatMessages } from '@/data/mockData';
+import { useAiCoach } from '@/hooks/useAiCoach';
 
 const prompts = ['Improve bench press', 'Plan my next leg day', 'Am I overtraining?'];
 
 export default function AiCoachScreen() {
+  const [draft, setDraft] = useState('How can I improve my bench press?');
+  const coach = useAiCoach(chatMessages);
+
   return (
     <Screen>
       <Text style={styles.title}>AI Coach</Text>
@@ -19,18 +24,26 @@ export default function AiCoachScreen() {
         {prompts.map((prompt) => <Text key={prompt} style={styles.prompt}>{prompt}</Text>)}
       </View>
       <View style={styles.chat}>
-        {chatMessages.length ? chatMessages.map((message) => (
+        {coach.messages.length ? coach.messages.map((message) => (
           <ChatBubble key={message.id} role={message.role} text={message.text} />
         )) : (
           <EmptyState title="Ask your AI coach" message="Get personalized guidance from your recent training data." icon="sparkles-outline" />
         )}
         <View style={styles.typing}>
           <Ionicons name="radio-button-on" size={10} color={colors.primary} />
-          <Text style={styles.typingText}>Streaming response preview</Text>
+          <Text style={styles.typingText}>{coach.isStreaming ? 'Coach is streaming...' : 'Streaming ready'}</Text>
         </View>
       </View>
-      <TextField label="Message" placeholder="How can I improve my bench press?" />
-      <Button title="Send message" icon={<Ionicons name="send" size={17} color={colors.background} />} />
+      {coach.error ? <Text style={styles.error}>{coach.error}</Text> : null}
+      <TextField label="Message" placeholder="How can I improve my bench press?" value={draft} onChangeText={setDraft} />
+      <Button
+        title={coach.isStreaming ? 'Streaming...' : 'Send message'}
+        icon={<Ionicons name="send" size={17} color={colors.background} />}
+        onPress={() => {
+          coach.sendMessage(draft);
+          setDraft('');
+        }}
+      />
     </Screen>
   );
 }
@@ -43,4 +56,5 @@ const styles = StyleSheet.create({
   chat: { marginBottom: 12 },
   typing: { alignItems: 'center', flexDirection: 'row', gap: 8, marginBottom: 18, marginLeft: 8 },
   typingText: { color: colors.muted, fontSize: 12 },
+  error: { color: colors.danger, fontSize: 13, lineHeight: 18, marginBottom: 12 },
 });

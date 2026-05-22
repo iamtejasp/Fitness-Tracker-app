@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Link, useLocalSearchParams } from 'expo-router';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { ExerciseRow } from '@/components/ExerciseRow';
@@ -7,11 +7,21 @@ import { getWorkoutVolume } from '@/components/WorkoutCard';
 import { Screen } from '@/components/Screen';
 import { StatCard } from '@/components/StatCard';
 import { colors } from '@/constants/theme';
-import { workouts } from '@/data/mockData';
+import { useDeleteWorkoutMutation, useWorkoutQuery } from '@/hooks/useWorkouts';
 
 export default function WorkoutDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const workout = workouts.find((item) => item.id === id) ?? workouts[0];
+  const workoutQuery = useWorkoutQuery(id ?? '');
+  const deleteWorkoutMutation = useDeleteWorkoutMutation();
+  const workout = workoutQuery.data;
+
+  if (!workout) {
+    return (
+      <Screen>
+        <Text style={styles.title}>{workoutQuery.isLoading ? 'Loading workout...' : 'Workout not found'}</Text>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
@@ -31,7 +41,15 @@ export default function WorkoutDetailsScreen() {
       </View>
       <View style={styles.actions}>
         <Link href={`/workout/${workout.id}/edit`} asChild><Button title="Edit workout" /></Link>
-        <Button title="Delete workout" variant="danger" />
+        <Button
+          title={deleteWorkoutMutation.isPending ? 'Deleting...' : 'Delete workout'}
+          variant="danger"
+          onPress={() =>
+            deleteWorkoutMutation.mutate(workout.id, {
+              onSuccess: () => router.replace('/(tabs)/workouts'),
+            })
+          }
+        />
       </View>
     </Screen>
   );

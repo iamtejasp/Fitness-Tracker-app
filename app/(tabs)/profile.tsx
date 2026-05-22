@@ -4,23 +4,32 @@ import { Button } from '@/components/Button';
 import { Screen } from '@/components/Screen';
 import { StatCard } from '@/components/StatCard';
 import { colors, radii } from '@/constants/theme';
-import { currentUser, imageUrls, stats } from '@/data/mockData';
+import { useAuth } from '@/context/AuthContext';
+import { imageUrls } from '@/data/mockData';
+import { useProfileQuery } from '@/hooks/useProfile';
+import { useWorkoutStatsQuery } from '@/hooks/useWorkouts';
 
 export default function ProfileScreen() {
+  const { user } = useAuth();
+  const profileQuery = useProfileQuery();
+  const statsQuery = useWorkoutStatsQuery();
+  const profile = profileQuery.data ?? user;
+  const stats = statsQuery.data;
+
   return (
     <Screen>
       <View style={styles.hero}>
         <Image source={{ uri: imageUrls.avatar }} style={styles.avatar} />
-        <Text style={styles.name}>{currentUser.name}</Text>
-        <Text style={styles.email}>{currentUser.email}</Text>
+        <Text style={styles.name}>{profile?.name ?? 'Athlete'}</Text>
+        <Text style={styles.email}>{profile?.email ?? 'No email loaded'}</Text>
       </View>
       <View style={styles.stats}>
-        <StatCard label="Workouts" value={stats.totalWorkouts} icon="barbell-outline" />
-        <StatCard label="This week" value={stats.workoutsThisWeek} icon="calendar-outline" accent={colors.coral} />
+        <StatCard label="Workouts" value={stats?.totalWorkouts ?? '...'} icon="barbell-outline" />
+        <StatCard label="This week" value={stats?.workoutsThisWeek ?? '...'} icon="calendar-outline" accent={colors.coral} />
       </View>
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Favorite movement</Text>
-        <Text style={styles.favorite}>{stats.mostFrequentExercise}</Text>
+        <Text style={styles.favorite}>{stats?.mostFrequentExercise ?? 'None yet'}</Text>
         <Text style={styles.cardBody}>You train this movement more than any other exercise in the current cycle.</Text>
       </View>
       <View style={styles.actions}>

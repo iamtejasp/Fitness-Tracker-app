@@ -1,17 +1,29 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/components/AppHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
 import { TextField } from '@/components/TextField';
 import { WorkoutCard } from '@/components/WorkoutCard';
 import { colors } from '@/constants/theme';
-import { workouts } from '@/data/mockData';
+import { queryClient } from '@/lib/queryClient';
+import { useWorkoutStatsQuery, useWorkoutsQuery } from '@/hooks/useWorkouts';
 
 export default function WorkoutsScreen() {
+  const workoutsQuery = useWorkoutsQuery(1, 20);
+  const statsQuery = useWorkoutStatsQuery();
+  const workouts = workoutsQuery.data?.data ?? [];
+
   return (
-    <Screen>
+    <Screen
+      refreshControl={
+        <RefreshControl
+          refreshing={workoutsQuery.isRefetching}
+          onRefresh={() => queryClient.invalidateQueries({ queryKey: ['workouts'] })}
+          tintColor={colors.primary}
+        />
+      }>
       <AppHeader title="Workouts" subtitle="All logged sessions" />
       <TextField label="Search" placeholder="Search exercise or workout date" />
       <View style={styles.filters}>
@@ -22,7 +34,9 @@ export default function WorkoutsScreen() {
       </View>
       <View style={styles.summary}>
         <Ionicons name="trending-up" size={20} color={colors.primary} />
-        <Text style={styles.summaryText}>4 workouts this week • 18 total exercises</Text>
+        <Text style={styles.summaryText}>
+          {statsQuery.data?.workoutsThisWeek ?? 0} workouts this week • {workouts.length} shown
+        </Text>
       </View>
       <View style={styles.list}>
         {workouts.length ? workouts.map((workout) => <WorkoutCard key={workout.id} workout={workout} />) : (

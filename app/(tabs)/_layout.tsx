@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
+import { useEffect } from 'react';
 import { colors } from '@/constants/theme';
+import { useAuth } from '@/context/AuthContext';
 
 function TabBarIcon({
   name,
@@ -13,6 +15,18 @@ function TabBarIcon({
 }
 
 export default function TabLayout() {
+  const { token, isBootstrapping } = useAuth();
+
+  useEffect(() => {
+    if (!isBootstrapping && !token) {
+      router.replace('/login');
+    }
+  }, [isBootstrapping, token]);
+
+  if (isBootstrapping || !token) {
+    return null;
+  }
+
   return (
     <Tabs
       screenOptions={{

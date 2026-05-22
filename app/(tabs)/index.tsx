@@ -3,26 +3,35 @@ import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { AppHeader } from '@/components/AppHeader';
 import { Button } from '@/components/Button';
+import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
 import { StatCard } from '@/components/StatCard';
 import { WorkoutCard } from '@/components/WorkoutCard';
 import { colors, radii } from '@/constants/theme';
-import { currentUser, imageUrls, stats, workouts } from '@/data/mockData';
+import { useAuth } from '@/context/AuthContext';
+import { imageUrls } from '@/data/mockData';
+import { useWorkoutStatsQuery, useWorkoutsQuery } from '@/hooks/useWorkouts';
 
 export default function HomeScreen() {
+  const { user } = useAuth();
+  const statsQuery = useWorkoutStatsQuery();
+  const workoutsQuery = useWorkoutsQuery(1, 5);
+  const stats = statsQuery.data;
+  const workouts = workoutsQuery.data?.data ?? [];
+
   return (
     <Screen>
       <AppHeader showSettings />
       <ImageBackground source={{ uri: imageUrls.dashboard }} style={styles.hero} imageStyle={styles.heroImage}>
         <View style={styles.heroOverlay} />
-        <Text style={styles.hello}>Hi, {currentUser.name}</Text>
-        <Text style={styles.heroTitle}>Push day is trending stronger.</Text>
-        <Text style={styles.heroBody}>Bench volume is up 8% compared with last week.</Text>
+        <Text style={styles.hello}>Hi, {user?.name ?? 'Athlete'}</Text>
+        <Text style={styles.heroTitle}>Your training dashboard is live.</Text>
+        <Text style={styles.heroBody}>Log a workout and your stats will refresh automatically.</Text>
       </ImageBackground>
       <View style={styles.statGrid}>
-        <StatCard label="Total workouts" value={stats.totalWorkouts} icon="flame-outline" />
-        <StatCard label="This week" value={stats.workoutsThisWeek} icon="calendar-outline" accent={colors.coral} />
-        <StatCard label="Top exercise" value="Bench" icon="trophy-outline" accent={colors.cyan} />
+        <StatCard label="Total workouts" value={stats?.totalWorkouts ?? '...'} icon="flame-outline" />
+        <StatCard label="This week" value={stats?.workoutsThisWeek ?? '...'} icon="calendar-outline" accent={colors.coral} />
+        <StatCard label="Top exercise" value={stats?.mostFrequentExercise ?? 'None'} icon="trophy-outline" accent={colors.cyan} />
       </View>
       <View style={styles.quickRow}>
         <Link href="/(tabs)/add" asChild>
@@ -37,7 +46,11 @@ export default function HomeScreen() {
         <Link href="/(tabs)/workouts" style={styles.viewAll}>View all</Link>
       </View>
       <View style={styles.list}>
-        {workouts.slice(0, 3).map((workout) => <WorkoutCard key={workout.id} workout={workout} />)}
+        {workouts.length ? workouts.slice(0, 3).map((workout) => (
+          <WorkoutCard key={workout.id} workout={workout} />
+        )) : (
+          <EmptyState title="No workouts yet" message="Create your first workout to unlock stats and AI coaching." action="Add workout" />
+        )}
       </View>
     </Screen>
   );

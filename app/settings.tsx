@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { Screen } from '@/components/Screen';
 import { colors, radii } from '@/constants/theme';
 import { API_BASE_URL } from '@/constants/config';
+import { useAuth } from '@/context/AuthContext';
 
 const rows = [
   { icon: 'scale-outline' as const, label: 'Units', value: 'Kilograms' },
@@ -15,6 +15,8 @@ const rows = [
 ];
 
 export default function SettingsScreen() {
+  const { logout } = useAuth();
+
   return (
     <Screen>
       <Text style={styles.title}>Settings</Text>
@@ -32,7 +34,7 @@ export default function SettingsScreen() {
       </View>
       <EmptyState title="Session expired state" message="Reusable auth error state for when a token expires after API integration." icon="lock-closed-outline" />
       <View style={styles.actions}>
-        <Link href="/login" asChild><Button title="Log out" variant="danger" /></Link>
+        <Button title="Log out" variant="danger" onPress={logout} />
       </View>
     </Screen>
   );

@@ -1,11 +1,22 @@
 import { ImageBackground, StyleSheet, Text, View } from 'react-native';
 import { Link } from 'expo-router';
+import { useEffect } from 'react';
+import { router } from 'expo-router';
 import { Button } from '@/components/Button';
 import { Logo } from '@/components/Logo';
 import { colors } from '@/constants/theme';
 import { imageUrls } from '@/data/mockData';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SplashScreen() {
+  const { token, isBootstrapping } = useAuth();
+
+  useEffect(() => {
+    if (!isBootstrapping && token) {
+      router.replace('/(tabs)');
+    }
+  }, [isBootstrapping, token]);
+
   return (
     <ImageBackground source={{ uri: imageUrls.dashboard }} style={styles.bg} imageStyle={styles.image}>
       <View style={styles.overlay} />
@@ -14,7 +25,11 @@ export default function SplashScreen() {
         <View style={styles.copy}>
           <Text style={styles.kicker}>Train smarter every week</Text>
           <Text style={styles.title}>Track workouts. Find plateaus. Coach your next set.</Text>
-          <Text style={styles.body}>A premium mobile fitness dashboard designed around workout history and AI guidance.</Text>
+          <Text style={styles.body}>
+            {isBootstrapping
+              ? 'Restoring your session...'
+              : 'A premium mobile fitness dashboard designed around workout history and AI guidance.'}
+          </Text>
         </View>
         <View style={styles.actions}>
           <Link href="/onboarding" asChild><Button title="Get started" /></Link>
