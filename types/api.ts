@@ -58,6 +58,34 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+  resetOtp?: string;
+}
+
+export interface VerifyResetOtpRequest {
+  email: string;
+  otp: string;
+}
+
+export interface VerifyResetOtpResponse {
+  resetToken: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  resetToken: string;
+  password: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+}
+
 export interface UpdateProfileRequest {
   name?: string;
   email?: string;
@@ -76,6 +104,10 @@ export interface UpdateWorkoutRequest {
 export interface WorkoutQuery {
   page?: number;
   limit?: number;
+  search?: string;
+  exercise?: string;
+  from?: string;
+  to?: string;
 }
 
 export interface CoachRequest {

@@ -6,7 +6,10 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { AppSettingsProvider } from '@/context/AppSettingsContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { NetworkProvider, OfflineBanner } from '@/context/NetworkContext';
+import { ToastProvider } from '@/context/ToastContext';
 import { queryClient } from '@/lib/queryClient';
 
 export { ErrorBoundary } from 'expo-router';
@@ -38,22 +41,32 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider value={DarkTheme}>
-          <StatusBar style="light" />
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#080B10' } }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="onboarding" />
-            <Stack.Screen name="login" />
-            <Stack.Screen name="register" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="workout/[id]" />
-            <Stack.Screen name="workout/[id]/edit" />
-            <Stack.Screen name="profile/edit" />
-            <Stack.Screen name="settings" />
-          </Stack>
-        </ThemeProvider>
-      </AuthProvider>
+      <NetworkProvider>
+        <ToastProvider>
+          <AppSettingsProvider>
+            <AuthProvider>
+              <ThemeProvider value={DarkTheme}>
+                <StatusBar style="light" />
+                <OfflineBanner />
+                <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#080B10' } }}>
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="onboarding" />
+                  <Stack.Screen name="login" />
+                  <Stack.Screen name="register" />
+                  <Stack.Screen name="forgot-password" />
+                  <Stack.Screen name="verify-reset-otp" />
+                  <Stack.Screen name="reset-password" />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="workout/[id]" />
+                  <Stack.Screen name="workout/[id]/edit" />
+                  <Stack.Screen name="profile/edit" />
+                  <Stack.Screen name="settings" />
+                </Stack>
+              </ThemeProvider>
+            </AuthProvider>
+          </AppSettingsProvider>
+        </ToastProvider>
+      </NetworkProvider>
     </QueryClientProvider>
   );
 }

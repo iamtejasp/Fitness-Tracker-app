@@ -24,6 +24,30 @@ export const spacing = {
   xl: 32,
 };
 
+export const typography = {
+  screenTitle: {
+    fontSize: 32,
+    fontWeight: '900' as const,
+    letterSpacing: 0,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '900' as const,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '900' as const,
+  },
+  body: {
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  caption: {
+    fontSize: 12,
+    fontWeight: '800' as const,
+  },
+};
+
 export const radii = {
   sm: 8,
   md: 12,

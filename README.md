@@ -65,7 +65,7 @@ npm run web    # Run on web browser
 │   │   ├── index.tsx       # Dashboard/Home screen
 │   │   ├── add.tsx         # Add workout screen
 │   │   ├── ai.tsx          # AI Coach screen
-│   │   ├── profile.tsx     # Profile tab
+│   │   ├── profile.tsx     # Profile screen
 │   │   ├── progress.tsx    # Progress tracking
 │   │   └── workouts.tsx    # Workout history
 │   ├── profile/            # Profile management
@@ -92,8 +92,8 @@ npm run web    # Run on web browser
 │   └── config.ts           # App configuration
 ├── types/                  # TypeScript interfaces
 │   └── api.ts              # API data structures
-├── data/                   # Mock data
-│   └── mockData.ts         # Sample workouts and users
+├── data/                   # Static UI seeds and remote image URLs
+│   └── uiContent.ts        # Remote image URLs and static UI content
 ├── assets/                 # Static assets
 │   ├── fonts/              # Custom fonts
 │   └── images/             # App icons and images
@@ -234,7 +234,7 @@ The app includes authentication screens:
 - **Register**: For new user creation
 - **Onboarding**: Initial setup flow after registration
 
-Currently using mock data for demonstration. Ready to integrate with backend API.
+Authentication is wired to the NestJS backend with JWT persistence through secure storage.
 
 ## 📱 Responsive Design
 
@@ -274,18 +274,27 @@ eas build --platform android
 npm run web
 ```
 
+For static hosting, build the web export and deploy with SPA fallback routing:
+
+```bash
+npx expo export --platform web
+```
+
+This repo includes `netlify.toml` and `vercel.json` so nested Expo Router paths resolve to `index.html`.
+
 ## 🔄 API Integration Points
 
-The app is structured to easily integrate with a backend API. Current mock data shows the expected data structures for:
+The app integrates with the NestJS backend under `/api/v1` for:
 
 - User authentication
 - Workout CRUD operations
 - AI coaching responses
 - Workout statistics
+- Profile management
 
 ## 📝 Development Notes
 
-- **State Management**: Currently using local component state and mock data
+- **State Management**: React Query for server state, local context for auth/settings/network/toasts
 - **Navigation**: File-based routing with Expo Router
 - **Styling**: React Native StyleSheet for native performance
 - **Icons**: Ionicons from Expo Vector Icons
@@ -293,7 +302,6 @@ The app is structured to easily integrate with a backend API. Current mock data 
 
 ## 🛣️ Future Enhancements
 
-- Backend API integration
 - Real-time synchronization
 - Social features (share workouts, friend groups)
 - Advanced analytics and insights

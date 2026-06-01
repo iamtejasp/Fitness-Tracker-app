@@ -1,21 +1,41 @@
 import { Link } from 'expo-router';
-import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
 import { getApiErrorMessage } from '@/api/axiosInstance';
 import { Button } from '@/components/Button';
+import { FormTextField } from '@/components/FormTextField';
 import { Logo } from '@/components/Logo';
 import { Screen } from '@/components/Screen';
-import { TextField } from '@/components/TextField';
 import { colors } from '@/constants/theme';
 import { useRegisterMutation } from '@/hooks/useAuthMutations';
 
+interface RegisterFormValues {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+const registerSchema: yup.ObjectSchema<RegisterFormValues> = yup.object({
+  name: yup.string().trim().min(2, 'Name must be at least 2 characters.').max(80, 'Name is too long.').required('Name is required.'),
+  email: yup.string().trim().email('Enter a valid email.').max(120, 'Email is too long.').required('Email is required.'),
+  password: yup.string().min(8, 'Password must be at least 8 characters.').max(128, 'Password is too long.').required('Password is required.'),
+  confirmPassword: yup.string().oneOf([yup.ref('password')], 'Passwords do not match.').required('Confirm your password.'),
+});
+
 export default function RegisterScreen() {
-  const [name, setName] = useState('Tejas');
-  const [email, setEmail] = useState(`tejas+${Date.now()}@example.com`);
-  const [password, setPassword] = useState('password123');
-  const [confirmPassword, setConfirmPassword] = useState('password123');
+  const { control, handleSubmit } = useForm<RegisterFormValues>({
+    resolver: yupResolver(registerSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
   const registerMutation = useRegisterMutation();
-  const passwordsMatch = password === confirmPassword;
   const error = registerMutation.error ? getApiErrorMessage(registerMutation.error) : null;
 
   return (
@@ -23,22 +43,18 @@ export default function RegisterScreen() {
       <Logo />
       <View style={styles.copy}>
         <Text style={styles.title}>Create your training profile</Text>
-        <Text style={styles.body}>Use dummy credentials for now. API auth will plug in later.</Text>
+        <Text style={styles.body}>Create an account to sync workouts, progress, and AI coaching advice.</Text>
       </View>
       <View style={styles.form}>
-        <TextField label="Name" placeholder="Tejas" value={name} onChangeText={setName} />
-        <TextField label="Email" placeholder="tejas@example.com" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
-        <TextField label="Password" placeholder="At least 8 characters" secureTextEntry value={password} onChangeText={setPassword} />
-        <TextField label="Confirm password" placeholder="Repeat password" secureTextEntry value={confirmPassword} onChangeText={setConfirmPassword} />
-        {!passwordsMatch ? <Text style={styles.error}>Passwords do not match.</Text> : null}
+        <FormTextField control={control} name="name" label="Name" placeholder="Tejas" />
+        <FormTextField control={control} name="email" label="Email" placeholder="tejas@example.com" keyboardType="email-address" autoCapitalize="none" />
+        <FormTextField control={control} name="password" label="Password" placeholder="At least 8 characters" secureTextEntry />
+        <FormTextField control={control} name="confirmPassword" label="Confirm password" placeholder="Repeat password" secureTextEntry />
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Button
-          title={registerMutation.isPending ? 'Creating account...' : 'Create account'}
-          onPress={() => {
-            if (passwordsMatch) {
-              registerMutation.mutate({ name, email, password });
-            }
-          }}
+          title="Create account"
+          loading={registerMutation.isPending}
+          onPress={handleSubmit(({ confirmPassword: _confirmPassword, ...values }) => registerMutation.mutate(values))}
         />
       </View>
       <Link href="/login" style={styles.link}>Already have an account?</Link>

@@ -17,18 +17,24 @@ export function getWorkoutVolume(workout: Workout) {
 
 export function WorkoutCard({ workout }: WorkoutCardProps) {
   const topExercises = workout.exercises.map((exercise) => exercise.name).join(' • ');
+  const volume = Math.round(getWorkoutVolume(workout));
+  const dateLabel = new Date(workout.date).toLocaleDateString('en', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
 
   return (
     <Link href={`/workout/${workout.id}`} asChild>
-      <Pressable style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
+      <Pressable
+        accessibilityHint="Opens workout details"
+        accessibilityLabel={`${dateLabel}, ${workout.exercises.length} exercises, ${volume} kilograms volume. ${topExercises}`}
+        accessibilityRole="button"
+        style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
         <View style={styles.row}>
           <View>
             <Text style={styles.date}>
-              {new Date(workout.date).toLocaleDateString('en', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric',
-              })}
+              {dateLabel}
             </Text>
             <Text style={styles.exercises} numberOfLines={1}>
               {topExercises}
@@ -38,7 +44,7 @@ export function WorkoutCard({ workout }: WorkoutCardProps) {
         </View>
         <View style={styles.metaRow}>
           <Text style={styles.meta}>{workout.exercises.length} exercises</Text>
-          <Text style={styles.meta}>{Math.round(getWorkoutVolume(workout))} kg volume</Text>
+          <Text style={styles.meta}>{volume} kg volume</Text>
         </View>
       </Pressable>
     </Link>

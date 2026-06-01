@@ -1,31 +1,37 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, radii } from '@/constants/theme';
 import { Button } from './Button';
+import { colors, radii } from '@/constants/theme';
 
-interface EmptyStateProps {
-  title: string;
-  message: string;
-  action?: string;
-  onAction?: () => void;
-  icon?: keyof typeof Ionicons.glyphMap;
+interface ErrorStateProps {
+  title?: string;
+  message?: string;
+  actionLabel?: string;
+  onRetry?: () => void;
 }
 
-export function EmptyState({
-  title,
-  message,
-  action,
-  onAction,
-  icon = 'barbell-outline',
-}: EmptyStateProps) {
+export function ErrorState({
+  title = 'Something went wrong',
+  message = 'We could not load this data. Check your connection and try again.',
+  actionLabel = 'Try again',
+  onRetry,
+}: ErrorStateProps) {
   return (
-    <View accessibilityLabel={`${title}. ${message}`} style={styles.card}>
+    <View accessibilityRole="alert" style={styles.card}>
       <View style={styles.icon}>
-        <Ionicons name={icon} size={30} color={colors.primary} />
+        <Ionicons name="warning-outline" size={28} color={colors.danger} />
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
-      {action ? <Button title={action} onPress={onAction} style={styles.button} /> : null}
+      {onRetry ? (
+        <Button
+          accessibilityHint="Retries the failed request"
+          title={actionLabel}
+          variant="secondary"
+          onPress={onRetry}
+          style={styles.button}
+        />
+      ) : null}
     </View>
   );
 }
@@ -41,7 +47,7 @@ const styles = StyleSheet.create({
   },
   icon: {
     alignItems: 'center',
-    backgroundColor: 'rgba(124, 255, 107, 0.12)',
+    backgroundColor: 'rgba(255, 92, 122, 0.12)',
     borderRadius: 999,
     height: 62,
     justifyContent: 'center',
@@ -62,6 +68,6 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 18,
-    minWidth: 180,
+    minWidth: 160,
   },
 });

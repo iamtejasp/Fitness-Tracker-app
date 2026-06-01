@@ -11,7 +11,7 @@ interface StatCardProps {
 
 export function StatCard({ label, value, icon, accent = colors.primary }: StatCardProps) {
   return (
-    <View style={styles.card}>
+    <View accessible accessibilityLabel={`${label}: ${value}`} style={styles.card}>
       <View style={[styles.icon, { backgroundColor: `${accent}22` }]}>
         <Ionicons name={icon} size={20} color={accent} />
       </View>

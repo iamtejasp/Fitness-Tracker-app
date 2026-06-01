@@ -1,16 +1,22 @@
 import { Link, Stack } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '@/constants/theme';
+import { Button } from '@/components/Button';
+import { Logo } from '@/components/Logo';
+import { colors, radii, typography } from '@/constants/theme';
 
 export default function NotFoundScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Not found' }} />
       <View style={styles.container}>
-        <Text style={styles.title}>This screen does not exist.</Text>
-        <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>Go to home screen</Text>
-        </Link>
+        <Logo />
+        <View style={styles.card}>
+          <Text accessibilityRole="header" style={styles.title}>Screen not found</Text>
+          <Text style={styles.body}>This route is not available in FitCoach. Return to the app and keep your training flow moving.</Text>
+          <Link href="/" asChild>
+            <Button title="Go to FitCoach" accessibilityHint="Returns to the app start screen" />
+          </Link>
+        </View>
       </View>
     </>
   );
@@ -24,17 +30,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
+  card: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    gap: 14,
+    marginTop: 28,
+    padding: 20,
+    width: '100%',
+  },
   title: {
     color: colors.text,
-    fontSize: 20,
-    fontWeight: 'bold',
+    ...typography.screenTitle,
   },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
-  },
-  linkText: {
-    color: colors.primary,
-    fontSize: 14,
+  body: {
+    color: colors.muted,
+    ...typography.body,
   },
 });

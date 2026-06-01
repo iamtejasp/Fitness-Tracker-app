@@ -1,8 +1,15 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radii } from '@/constants/theme';
 import { Exercise } from '@/types/api';
 
-export function ExerciseRow({ exercise }: { exercise: Exercise }) {
+interface ExerciseRowProps {
+  exercise: Exercise;
+  onEdit?: () => void;
+  onRemove?: () => void;
+}
+
+export function ExerciseRow({ exercise, onEdit, onRemove }: ExerciseRowProps) {
   return (
     <View style={styles.row}>
       <View style={styles.nameWrap}>
@@ -17,6 +24,30 @@ export function ExerciseRow({ exercise }: { exercise: Exercise }) {
         <Text style={styles.metricValue}>{exercise.reps}</Text>
         <Text style={styles.metricLabel}>reps</Text>
       </View>
+      {onEdit || onRemove ? (
+        <View style={styles.actions}>
+          {onEdit ? (
+            <Pressable
+              accessibilityLabel={`Edit ${exercise.name}`}
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={onEdit}
+              style={styles.action}>
+              <Ionicons name="pencil-outline" size={18} color={colors.text} />
+            </Pressable>
+          ) : null}
+          {onRemove ? (
+            <Pressable
+              accessibilityLabel={`Remove ${exercise.name}`}
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={onRemove}
+              style={styles.action}>
+              <Ionicons name="trash-outline" size={18} color={colors.danger} />
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -61,5 +92,17 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 10,
     marginTop: 2,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  action: {
+    alignItems: 'center',
+    backgroundColor: colors.cardElevated,
+    borderRadius: radii.sm,
+    height: 38,
+    justifyContent: 'center',
+    width: 38,
   },
 });

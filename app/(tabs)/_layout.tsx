@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, Tabs } from 'expo-router';
 import { useEffect } from 'react';
+import { RestoringSession } from '@/components/RestoringSession';
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 
@@ -23,8 +24,12 @@ export default function TabLayout() {
     }
   }, [isBootstrapping, token]);
 
-  if (isBootstrapping || !token) {
-    return null;
+  if (isBootstrapping) {
+    return <RestoringSession />;
+  }
+
+  if (!token) {
+    return <RestoringSession />;
   }
 
   return (
@@ -51,7 +56,7 @@ export default function TabLayout() {
       <Tabs.Screen name="add" options={{ title: 'Add', tabBarIcon: ({ color }) => <TabBarIcon name="add-circle" color={color} /> }} />
       <Tabs.Screen name="progress" options={{ title: 'Progress', tabBarIcon: ({ color }) => <TabBarIcon name="analytics-outline" color={color} /> }} />
       <Tabs.Screen name="ai" options={{ title: 'Coach', tabBarIcon: ({ color }) => <TabBarIcon name="sparkles-outline" color={color} /> }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ({ color }) => <TabBarIcon name="person-outline" color={color} /> }} />
+      <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
   );
 }

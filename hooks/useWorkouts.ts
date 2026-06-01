@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import {
   createWorkout,
   deleteWorkout,
@@ -10,16 +10,33 @@ import {
 } from '@/api/workouts.api';
 import { queryClient } from '@/lib/queryClient';
 import { queryKeys } from '@/lib/queryKeys';
-import { CreateWorkoutRequest, UpdateWorkoutRequest } from '@/types/api';
+import { CreateWorkoutRequest, UpdateWorkoutRequest, WorkoutQuery } from '@/types/api';
 
 function invalidateWorkoutQueries() {
   queryClient.invalidateQueries({ queryKey: ['workouts'] });
 }
 
-export function useWorkoutsQuery(page = 1, limit = 10) {
+export function useWorkoutsQuery(pageOrQuery: number | WorkoutQuery = 1, limit = 10) {
+  const query =
+    typeof pageOrQuery === 'number'
+      ? { page: pageOrQuery, limit }
+      : { page: 1, limit: 10, ...pageOrQuery };
+
   return useQuery({
-    queryKey: queryKeys.workoutList(page, limit),
-    queryFn: () => getWorkouts({ page, limit }),
+    queryKey: queryKeys.workoutList(query),
+    queryFn: () => getWorkouts(query),
+  });
+}
+
+export function useInfiniteWorkoutsQuery(query: Omit<WorkoutQuery, 'page'> = {}) {
+  const normalizedQuery = { limit: 20, ...query };
+
+  return useInfiniteQuery({
+    queryKey: queryKeys.workoutInfiniteList(normalizedQuery),
+    queryFn: ({ pageParam }) => getWorkouts({ ...normalizedQuery, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
   });
 }
 

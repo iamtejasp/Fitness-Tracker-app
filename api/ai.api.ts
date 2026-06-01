@@ -12,6 +12,7 @@ export async function getCoachAdvice(payload: CoachRequest): Promise<CoachRespon
 export async function streamCoachAdvice(
   payload: CoachRequest,
   onChunk: (chunk: string) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
   const token = await getAccessToken();
   const response = await fetch(`${API_BASE_URL}/ai/coach/stream`, {
@@ -21,6 +22,7 @@ export async function streamCoachAdvice(
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(payload),
+    signal,
   });
 
   if (!response.ok) {
@@ -62,6 +64,10 @@ export async function streamCoachAdvice(
       }
 
       const parsed = JSON.parse(payloadText) as { content?: string; message?: string };
+
+      if (parsed.message) {
+        throw new Error(parsed.message);
+      }
 
       if (parsed.content) {
         onChunk(parsed.content);

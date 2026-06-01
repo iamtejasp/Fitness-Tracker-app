@@ -1,15 +1,18 @@
-import { ImageBackground, StyleSheet, Text, View } from 'react-native';
-import { Link } from 'expo-router';
+import { StyleSheet, Text, View } from 'react-native';
+import { Link, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { AppHeader } from '@/components/AppHeader';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
+import { ErrorState } from '@/components/ErrorState';
+import { RemoteImageBackground } from '@/components/RemoteImageBackground';
 import { Screen } from '@/components/Screen';
+import { StatCardSkeleton, WorkoutCardSkeleton } from '@/components/Skeleton';
 import { StatCard } from '@/components/StatCard';
 import { WorkoutCard } from '@/components/WorkoutCard';
 import { colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
-import { imageUrls } from '@/data/mockData';
+import { imageUrls } from '@/data/uiContent';
 import { useWorkoutStatsQuery, useWorkoutsQuery } from '@/hooks/useWorkouts';
 
 export default function HomeScreen() {
@@ -18,21 +21,30 @@ export default function HomeScreen() {
   const workoutsQuery = useWorkoutsQuery(1, 5);
   const stats = statsQuery.data;
   const workouts = workoutsQuery.data?.data ?? [];
+  const hasError = statsQuery.isError || workoutsQuery.isError;
 
   return (
     <Screen>
       <AppHeader showSettings />
-      <ImageBackground source={{ uri: imageUrls.dashboard }} style={styles.hero} imageStyle={styles.heroImage}>
+      <RemoteImageBackground source={{ uri: imageUrls.dashboard }} style={styles.hero} imageStyle={styles.heroImage}>
         <View style={styles.heroOverlay} />
         <Text style={styles.hello}>Hi, {user?.name ?? 'Athlete'}</Text>
         <Text style={styles.heroTitle}>Your training dashboard is live.</Text>
         <Text style={styles.heroBody}>Log a workout and your stats will refresh automatically.</Text>
-      </ImageBackground>
-      <View style={styles.statGrid}>
-        <StatCard label="Total workouts" value={stats?.totalWorkouts ?? '...'} icon="flame-outline" />
-        <StatCard label="This week" value={stats?.workoutsThisWeek ?? '...'} icon="calendar-outline" accent={colors.coral} />
-        <StatCard label="Top exercise" value={stats?.mostFrequentExercise ?? 'None'} icon="trophy-outline" accent={colors.cyan} />
-      </View>
+      </RemoteImageBackground>
+      {statsQuery.isLoading ? (
+        <View style={styles.statGrid}>
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+        </View>
+      ) : (
+        <View style={styles.statGrid}>
+          <StatCard label="Total workouts" value={stats?.totalWorkouts ?? 0} icon="flame-outline" />
+          <StatCard label="This week" value={stats?.workoutsThisWeek ?? 0} icon="calendar-outline" accent={colors.coral} />
+          <StatCard label="Top exercise" value={stats?.mostFrequentExercise ?? 'None'} icon="trophy-outline" accent={colors.cyan} />
+        </View>
+      )}
       <View style={styles.quickRow}>
         <Link href="/(tabs)/add" asChild>
           <Button title="Add workout" icon={<Ionicons name="add" size={18} color={colors.background} />} style={styles.quickButton} />
@@ -46,10 +58,26 @@ export default function HomeScreen() {
         <Link href="/(tabs)/workouts" style={styles.viewAll}>View all</Link>
       </View>
       <View style={styles.list}>
-        {workouts.length ? workouts.slice(0, 3).map((workout) => (
+        {hasError ? (
+          <ErrorState onRetry={() => {
+            statsQuery.refetch();
+            workoutsQuery.refetch();
+          }} />
+        ) : workoutsQuery.isLoading ? (
+          <>
+            <WorkoutCardSkeleton />
+            <WorkoutCardSkeleton />
+            <WorkoutCardSkeleton />
+          </>
+        ) : workouts.length ? workouts.slice(0, 3).map((workout) => (
           <WorkoutCard key={workout.id} workout={workout} />
         )) : (
-          <EmptyState title="No workouts yet" message="Create your first workout to unlock stats and AI coaching." action="Add workout" />
+          <EmptyState
+            title="No workouts yet"
+            message="Create your first workout to unlock stats and AI coaching."
+            action="Add workout"
+            onAction={() => router.push('/(tabs)/add')}
+          />
         )}
       </View>
     </Screen>

@@ -1,15 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link, router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ExerciseRow } from '@/components/ExerciseRow';
 import { getWorkoutVolume } from '@/components/WorkoutCard';
 import { Screen } from '@/components/Screen';
 import { StatCard } from '@/components/StatCard';
 import { colors } from '@/constants/theme';
+import { useToast } from '@/context/ToastContext';
 import { useDeleteWorkoutMutation, useWorkoutQuery } from '@/hooks/useWorkouts';
 
 export default function WorkoutDetailsScreen() {
+  const { showToast } = useToast();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { id } = useLocalSearchParams<{ id: string }>();
   const workoutQuery = useWorkoutQuery(id ?? '');
   const deleteWorkoutMutation = useDeleteWorkoutMutation();
@@ -42,15 +47,30 @@ export default function WorkoutDetailsScreen() {
       <View style={styles.actions}>
         <Link href={`/workout/${workout.id}/edit`} asChild><Button title="Edit workout" /></Link>
         <Button
-          title={deleteWorkoutMutation.isPending ? 'Deleting...' : 'Delete workout'}
+          title="Delete workout"
           variant="danger"
-          onPress={() =>
-            deleteWorkoutMutation.mutate(workout.id, {
-              onSuccess: () => router.replace('/(tabs)/workouts'),
-            })
-          }
+          loading={deleteWorkoutMutation.isPending}
+          onPress={() => setIsDeleteDialogOpen(true)}
         />
       </View>
+      <ConfirmDialog
+        destructive
+        visible={isDeleteDialogOpen}
+        title="Delete workout?"
+        message="This removes the workout from your history. This action cannot be undone."
+        confirmLabel="Delete"
+        loading={deleteWorkoutMutation.isPending}
+        onCancel={() => setIsDeleteDialogOpen(false)}
+        onConfirm={() =>
+          deleteWorkoutMutation.mutate(workout.id, {
+            onSuccess: () => {
+              setIsDeleteDialogOpen(false);
+              showToast({ message: 'Workout deleted.', type: 'success' });
+              router.replace('/(tabs)/workouts');
+            },
+          })
+        }
+      />
     </Screen>
   );
 }

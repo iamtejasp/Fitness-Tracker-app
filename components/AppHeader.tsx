@@ -22,7 +22,11 @@ export function AppHeader({ title, subtitle, showSettings = false }: AppHeaderPr
         <Logo size="sm" />
       )}
       {showSettings ? (
-        <Link href="/settings" style={styles.settings}>
+        <Link
+          accessibilityLabel="Open settings"
+          accessibilityRole="button"
+          href="/settings"
+          style={styles.settings}>
           <Ionicons name="settings-outline" size={22} color={colors.text} />
         </Link>
       ) : null}
@@ -53,6 +57,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 14,
     borderWidth: 1,
+    minHeight: 44,
+    minWidth: 44,
     padding: 11,
   },
 });

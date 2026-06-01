@@ -14,6 +14,10 @@ export async function getWorkouts(query: WorkoutQuery = {}): Promise<PaginatedWo
     params: {
       page: query.page ?? 1,
       limit: query.limit ?? 10,
+      search: query.search,
+      exercise: query.exercise,
+      from: query.from,
+      to: query.to,
     },
   });
 

@@ -1,32 +1,67 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { Link } from 'expo-router';
+import { useState } from 'react';
 import { Button } from '@/components/Button';
+import { ErrorState } from '@/components/ErrorState';
 import { Screen } from '@/components/Screen';
+import { Skeleton, StatCardSkeleton } from '@/components/Skeleton';
 import { StatCard } from '@/components/StatCard';
 import { colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
-import { imageUrls } from '@/data/mockData';
+import { imageUrls } from '@/data/uiContent';
 import { useProfileQuery } from '@/hooks/useProfile';
 import { useWorkoutStatsQuery } from '@/hooks/useWorkouts';
 
 export default function ProfileScreen() {
   const { user } = useAuth();
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const profileQuery = useProfileQuery();
   const statsQuery = useWorkoutStatsQuery();
   const profile = profileQuery.data ?? user;
   const stats = statsQuery.data;
 
+  if (profileQuery.isError || statsQuery.isError) {
+    return (
+      <Screen>
+        <ErrorState onRetry={() => {
+          profileQuery.refetch();
+          statsQuery.refetch();
+        }} />
+      </Screen>
+    );
+  }
+
   return (
     <Screen>
       <View style={styles.hero}>
-        <Image source={{ uri: imageUrls.avatar }} style={styles.avatar} />
-        <Text style={styles.name}>{profile?.name ?? 'Athlete'}</Text>
-        <Text style={styles.email}>{profile?.email ?? 'No email loaded'}</Text>
+        {profileQuery.isLoading ? (
+          <Skeleton width={104} height={104} radius={999} />
+        ) : avatarFailed ? (
+          <View accessibilityLabel="Profile avatar initials" style={styles.avatarFallback}>
+            <Text style={styles.avatarInitials}>{getInitials(profile?.name)}</Text>
+          </View>
+        ) : (
+          <Image
+            accessibilityLabel="Profile avatar"
+            source={{ uri: imageUrls.avatar }}
+            style={styles.avatar}
+            onError={() => setAvatarFailed(true)}
+          />
+        )}
+        <Text style={styles.name}>{profileQuery.isLoading ? 'Loading...' : profile?.name ?? 'Athlete'}</Text>
+        <Text style={styles.email}>{profileQuery.isLoading ? 'Fetching profile' : profile?.email ?? 'No email loaded'}</Text>
       </View>
-      <View style={styles.stats}>
-        <StatCard label="Workouts" value={stats?.totalWorkouts ?? '...'} icon="barbell-outline" />
-        <StatCard label="This week" value={stats?.workoutsThisWeek ?? '...'} icon="calendar-outline" accent={colors.coral} />
-      </View>
+      {statsQuery.isLoading ? (
+        <View style={styles.stats}>
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+        </View>
+      ) : (
+        <View style={styles.stats}>
+          <StatCard label="Workouts" value={stats?.totalWorkouts ?? 0} icon="barbell-outline" />
+          <StatCard label="This week" value={stats?.workoutsThisWeek ?? 0} icon="calendar-outline" accent={colors.coral} />
+        </View>
+      )}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Favorite movement</Text>
         <Text style={styles.favorite}>{stats?.mostFrequentExercise ?? 'None yet'}</Text>
@@ -43,6 +78,8 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   hero: { alignItems: 'center', marginBottom: 22 },
   avatar: { borderColor: colors.primary, borderRadius: 999, borderWidth: 3, height: 104, width: 104 },
+  avatarFallback: { alignItems: 'center', backgroundColor: colors.cardElevated, borderColor: colors.primary, borderRadius: 999, borderWidth: 3, height: 104, justifyContent: 'center', width: 104 },
+  avatarInitials: { color: colors.primary, fontSize: 34, fontWeight: '900' },
   name: { color: colors.text, fontSize: 30, fontWeight: '900', marginTop: 14 },
   email: { color: colors.muted, fontSize: 14, marginTop: 4 },
   stats: { flexDirection: 'row', gap: 10, marginBottom: 16 },
@@ -52,3 +89,16 @@ const styles = StyleSheet.create({
   cardBody: { color: colors.muted, fontSize: 14, lineHeight: 20, marginTop: 8 },
   actions: { gap: 12 },
 });
+
+function getInitials(name?: string) {
+  if (!name?.trim()) {
+    return 'A';
+  }
+
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+}
