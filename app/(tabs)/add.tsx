@@ -8,6 +8,7 @@ import * as yup from 'yup';
 import { getApiErrorMessage } from '@/api/axiosInstance';
 import { Button } from '@/components/Button';
 import { ExerciseRow } from '@/components/ExerciseRow';
+import { FormDatePickerField } from '@/components/FormDatePickerField';
 import { FormTextField } from '@/components/FormTextField';
 import { Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -24,7 +25,7 @@ interface AddWorkoutFormValues {
 }
 
 const addWorkoutSchema: yup.ObjectSchema<AddWorkoutFormValues> = yup.object({
-  date: yup.string().trim().required('Workout date is required.').test('valid-date', 'Enter a valid date as YYYY-MM-DD.', isValidWorkoutDate),
+  date: yup.string().trim().required('Workout date is required.').test('valid-date', 'Select a valid workout date.', isValidWorkoutDate),
   name: yup.string().trim().min(1, 'Exercise name is required.').max(120, 'Exercise name is too long.').required('Exercise name is required.'),
   sets: yup.string().required('Sets are required.').test('sets-range', 'Sets must be 1-100.', (value) => Number(value) >= 1 && Number(value) <= 100),
   reps: yup.string().required('Reps are required.').test('reps-range', 'Reps must be 1-1000.', (value) => Number(value) >= 1 && Number(value) <= 1000),
@@ -75,7 +76,7 @@ export default function AddWorkoutScreen() {
     const date = getValues('date');
 
     if (!isValidWorkoutDate(date)) {
-      setError('date', { message: 'Enter a valid date as YYYY-MM-DD.' });
+      setError('date', { message: 'Select a valid workout date.' });
       return;
     }
 
@@ -100,7 +101,7 @@ export default function AddWorkoutScreen() {
       <Text style={styles.title}>Add workout</Text>
       <Text style={styles.subtitle}>Log the date and exercises from your training session.</Text>
       <View style={styles.form}>
-        <FormTextField control={control} name="date" label="Date" placeholder="YYYY-MM-DD" />
+        <FormDatePickerField control={control} name="date" label="Date" />
         <Text style={styles.sectionTitle}>Exercises</Text>
         {exercises.map((exercise, index) => (
           <ExerciseRow

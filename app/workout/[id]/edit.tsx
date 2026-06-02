@@ -7,6 +7,7 @@ import * as yup from 'yup';
 import { getApiErrorMessage } from '@/api/axiosInstance';
 import { Button } from '@/components/Button';
 import { ExerciseRow } from '@/components/ExerciseRow';
+import { FormDatePickerField } from '@/components/FormDatePickerField';
 import { FormTextField } from '@/components/FormTextField';
 import { Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -23,7 +24,7 @@ interface EditWorkoutFormValues {
 }
 
 const editWorkoutSchema: yup.ObjectSchema<EditWorkoutFormValues> = yup.object({
-  date: yup.string().trim().optional().default('').test('valid-date', 'Enter a valid date as YYYY-MM-DD.', (value) => !value || isValidWorkoutDate(value)),
+  date: yup.string().trim().optional().default('').test('valid-date', 'Select a valid workout date.', (value) => !value || isValidWorkoutDate(value)),
   name: yup.string().trim().optional().default(''),
   sets: yup.string().optional().default('').test('sets-range', 'Sets must be 1-100.', (value) => !value || (Number(value) >= 1 && Number(value) <= 100)),
   reps: yup.string().optional().default('').test('reps-range', 'Reps must be 1-1000.', (value) => !value || (Number(value) >= 1 && Number(value) <= 1000)),
@@ -97,7 +98,12 @@ export default function EditWorkoutScreen() {
       <Text style={styles.title}>Edit workout</Text>
       <Text style={styles.subtitle}>Update the workout date, edit existing exercises, or add new rows.</Text>
       <View style={styles.form}>
-        <FormTextField control={control} name="date" label="New date" placeholder={workout.date.slice(0, 10)} />
+        <FormDatePickerField
+          control={control}
+          name="date"
+          label="New date"
+          placeholder={workout.date.slice(0, 10)}
+        />
         {exercises.map((exercise, index) => (
           <ExerciseRow
             key={`${exercise.name}-${index}`}
@@ -157,7 +163,7 @@ export default function EditWorkoutScreen() {
           onPress={() => {
             const date = getValues('date');
             if (date && !isValidWorkoutDate(date)) {
-              setFormError('Enter a valid date as YYYY-MM-DD.');
+              setFormError('Select a valid workout date.');
               return;
             }
 
