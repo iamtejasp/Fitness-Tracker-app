@@ -22,7 +22,7 @@ export default function SplashScreen() {
     <RemoteImageBackground source={{ uri: imageUrls.dashboard }} style={styles.bg} imageStyle={styles.image}>
       <View style={styles.overlay} />
       <View style={styles.content}>
-        <Logo />
+        <Logo tone="onImage" />
         <View style={styles.copy}>
           <Text style={styles.kicker}>Train smarter every week</Text>
           <Text style={styles.title}>Track workouts. Find plateaus. Coach your next set.</Text>
