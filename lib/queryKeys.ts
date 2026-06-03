@@ -27,4 +27,6 @@ export const queryKeys = {
   workoutDetail: (id: string) => ['workouts', 'detail', id] as const,
   workoutStats: ['workouts', 'stats'] as const,
   last30Days: ['workouts', 'last-30-days'] as const,
+  coachHistory: (page = 1, limit = 50) =>
+    ['ai', 'coach-history', page, limit] as const,
 };

@@ -1,27 +1,27 @@
 import * as SecureStore from 'expo-secure-store';
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 import { Platform } from 'react-native';
+import { applyThemeToDocument, normalizeThemeId, ThemeId } from '@/constants/theme';
 
 type Units = 'kg' | 'lb';
-type ThemePreference = 'dark' | 'system';
 
 interface AppSettings {
   units: Units;
-  theme: ThemePreference;
+  theme: ThemeId;
   remindersEnabled: boolean;
 }
 
 interface AppSettingsContextValue extends AppSettings {
   isLoading: boolean;
   setUnits: (units: Units) => Promise<void>;
-  setTheme: (theme: ThemePreference) => Promise<void>;
+  setTheme: (theme: ThemeId) => Promise<void>;
   setRemindersEnabled: (enabled: boolean) => Promise<void>;
 }
 
 const SETTINGS_KEY = 'fitcoach_app_settings';
 const defaultSettings: AppSettings = {
   units: 'kg',
-  theme: 'dark',
+  theme: 'default',
   remindersEnabled: true,
 };
 
@@ -54,6 +54,10 @@ export function AppSettingsProvider({ children }: PropsWithChildren) {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    applyThemeToDocument(settings.theme);
+  }, [settings.theme]);
 
   async function updateSettings(nextSettings: AppSettings) {
     setSettings(nextSettings);
@@ -94,7 +98,12 @@ async function readSettings(): Promise<Partial<AppSettings> | null> {
     return null;
   }
 
-  return JSON.parse(rawSettings) as Partial<AppSettings>;
+  const parsed = JSON.parse(rawSettings) as Partial<AppSettings>;
+
+  return {
+    ...parsed,
+    theme: normalizeThemeId(parsed.theme),
+  };
 }
 
 async function writeSettings(settings: AppSettings) {

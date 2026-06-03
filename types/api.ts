@@ -39,6 +39,29 @@ export interface CoachResponse {
   advice: string;
 }
 
+export type CoachMessageRole = 'user' | 'assistant';
+export type CoachMessageStatus = 'complete' | 'error';
+
+export interface CoachHistoryMessage {
+  id: string;
+  _id?: string;
+  role: CoachMessageRole;
+  content: string;
+  status: CoachMessageStatus;
+  clientMessageId?: string;
+  turnId: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface PaginatedCoachHistory {
+  data: CoachHistoryMessage[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface PaginatedWorkouts {
   data: Workout[];
   page: number;
@@ -112,4 +135,5 @@ export interface WorkoutQuery {
 
 export interface CoachRequest {
   message: string;
+  clientMessageId?: string;
 }

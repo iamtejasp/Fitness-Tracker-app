@@ -1,20 +1,17 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Link } from 'expo-router';
-import { useState } from 'react';
 import { Button } from '@/components/Button';
 import { ErrorState } from '@/components/ErrorState';
 import { Screen } from '@/components/Screen';
-import { Skeleton, StatCardSkeleton } from '@/components/Skeleton';
+import { StatCardSkeleton } from '@/components/Skeleton';
 import { StatCard } from '@/components/StatCard';
 import { colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
-import { imageUrls } from '@/data/uiContent';
 import { useProfileQuery } from '@/hooks/useProfile';
 import { useWorkoutStatsQuery } from '@/hooks/useWorkouts';
 
 export default function ProfileScreen() {
-  const { user } = useAuth();
-  const [avatarFailed, setAvatarFailed] = useState(false);
+  const { logout, user } = useAuth();
   const profileQuery = useProfileQuery();
   const statsQuery = useWorkoutStatsQuery();
   const profile = profileQuery.data ?? user;
@@ -34,20 +31,6 @@ export default function ProfileScreen() {
   return (
     <Screen>
       <View style={styles.hero}>
-        {profileQuery.isLoading ? (
-          <Skeleton width={104} height={104} radius={999} />
-        ) : avatarFailed ? (
-          <View accessibilityLabel="Profile avatar initials" style={styles.avatarFallback}>
-            <Text style={styles.avatarInitials}>{getInitials(profile?.name)}</Text>
-          </View>
-        ) : (
-          <Image
-            accessibilityLabel="Profile avatar"
-            source={{ uri: imageUrls.avatar }}
-            style={styles.avatar}
-            onError={() => setAvatarFailed(true)}
-          />
-        )}
         <Text style={styles.name}>{profileQuery.isLoading ? 'Loading...' : profile?.name ?? 'Athlete'}</Text>
         <Text style={styles.email}>{profileQuery.isLoading ? 'Fetching profile' : profile?.email ?? 'No email loaded'}</Text>
       </View>
@@ -70,17 +53,15 @@ export default function ProfileScreen() {
       <View style={styles.actions}>
         <Link href="/profile/edit" asChild><Button title="Edit profile" /></Link>
         <Link href="/settings" asChild><Button title="Settings" variant="secondary" /></Link>
+        <Button title="Log out" variant="danger" onPress={logout} />
       </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { alignItems: 'center', marginBottom: 22 },
-  avatar: { borderColor: colors.primary, borderRadius: 999, borderWidth: 3, height: 104, width: 104 },
-  avatarFallback: { alignItems: 'center', backgroundColor: colors.cardElevated, borderColor: colors.primary, borderRadius: 999, borderWidth: 3, height: 104, justifyContent: 'center', width: 104 },
-  avatarInitials: { color: colors.primary, fontSize: 34, fontWeight: '900' },
-  name: { color: colors.text, fontSize: 30, fontWeight: '900', marginTop: 14 },
+  hero: { alignItems: 'center', marginBottom: 22, paddingTop: 12 },
+  name: { color: colors.text, fontSize: 30, fontWeight: '900' },
   email: { color: colors.muted, fontSize: 14, marginTop: 4 },
   stats: { flexDirection: 'row', gap: 10, marginBottom: 16 },
   card: { backgroundColor: colors.card, borderColor: colors.border, borderRadius: radii.lg, borderWidth: 1, marginBottom: 18, padding: 18 },
@@ -89,16 +70,3 @@ const styles = StyleSheet.create({
   cardBody: { color: colors.muted, fontSize: 14, lineHeight: 20, marginTop: 8 },
   actions: { gap: 12 },
 });
-
-function getInitials(name?: string) {
-  if (!name?.trim()) {
-    return 'A';
-  }
-
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('');
-}

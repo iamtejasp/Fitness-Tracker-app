@@ -1,7 +1,15 @@
 import { API_BASE_URL } from '@/constants/config';
 import { getAccessToken } from '@/lib/authToken';
 import { axiosInstance } from './axiosInstance';
-import { CoachRequest, CoachResponse } from '@/types/api';
+import { CoachRequest, CoachResponse, PaginatedCoachHistory } from '@/types/api';
+
+export async function getCoachHistory(page = 1, limit = 50): Promise<PaginatedCoachHistory> {
+  const { data } = await axiosInstance.get<PaginatedCoachHistory>('/ai/coach/history', {
+    params: { page, limit },
+  });
+
+  return data;
+}
 
 export async function getCoachAdvice(payload: CoachRequest): Promise<CoachResponse> {
   const { data } = await axiosInstance.post<CoachResponse>('/ai/coach', payload);

@@ -1,6 +1,10 @@
-import { useRef, useState } from 'react';
-import { getCoachAdvice, streamCoachAdvice } from '@/api/ai.api';
+import { useMemo, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getCoachAdvice, getCoachHistory, streamCoachAdvice } from '@/api/ai.api';
 import { getApiErrorMessage } from '@/api/axiosInstance';
+import { queryClient } from '@/lib/queryClient';
+import { queryKeys } from '@/lib/queryKeys';
+import { CoachHistoryMessage } from '@/types/api';
 
 export interface ChatMessage {
   id: string;
@@ -10,11 +14,23 @@ export interface ChatMessage {
   sourceText?: string;
 }
 
-export function useAiCoach(initialMessages: ChatMessage[] = []) {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+export function useAiCoach() {
+  const historyQuery = useQuery({
+    queryKey: queryKeys.coachHistory(1, 50),
+    queryFn: () => getCoachHistory(1, 50),
+  });
+  const historyMessages = useMemo(
+    () => mapHistoryToChatMessages(historyQuery.data?.data ?? []),
+    [historyQuery.data],
+  );
+  const [optimisticMessages, setOptimisticMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const messages = useMemo(
+    () => [...historyMessages, ...optimisticMessages],
+    [historyMessages, optimisticMessages],
+  );
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
@@ -34,7 +50,9 @@ export function useAiCoach(initialMessages: ChatMessage[] = []) {
       return;
     }
 
-    setMessages((current) => current.filter((message) => message.id !== assistantMessageId));
+    setOptimisticMessages((current) =>
+      current.filter((message) => message.id !== assistantMessageId),
+    );
     await createAssistantResponse(sourceText, false);
   }
 
@@ -42,17 +60,30 @@ export function useAiCoach(initialMessages: ChatMessage[] = []) {
     abortControllerRef.current?.abort();
   }
 
+  async function refreshHistory() {
+    await queryClient.invalidateQueries({ queryKey: ['ai', 'coach-history'] });
+    setOptimisticMessages([]);
+  }
+
   async function createAssistantResponse(text: string, includeUserMessage: boolean) {
     const timestamp = Date.now();
-    const assistantId = `assistant-${timestamp}`;
+    const clientMessageId = `coach-${timestamp}`;
+    const assistantId = `assistant-${clientMessageId}`;
     const abortController = new AbortController();
 
     abortControllerRef.current = abortController;
     setError(null);
     setIsStreaming(true);
-    setMessages((current) => [
+    setOptimisticMessages((current) => [
       ...current,
-      ...(includeUserMessage ? [{ id: `user-${timestamp}`, role: 'user' as const, text }] : []),
+      ...(includeUserMessage
+        ? [{
+            id: `user-${clientMessageId}`,
+            role: 'user' as const,
+            text,
+            status: 'complete' as const,
+          }]
+        : []),
       {
         id: assistantId,
         role: 'assistant' as const,
@@ -66,10 +97,10 @@ export function useAiCoach(initialMessages: ChatMessage[] = []) {
 
     try {
       await streamCoachAdvice(
-        { message: text },
+        { message: text, clientMessageId },
         (chunk) => {
           receivedChunk = true;
-          setMessages((current) =>
+          setOptimisticMessages((current) =>
             current.map((message) =>
               message.id === assistantId
                 ? { ...message, text: `${message.text}${chunk}` }
@@ -80,7 +111,7 @@ export function useAiCoach(initialMessages: ChatMessage[] = []) {
         abortController.signal,
       );
 
-      setMessages((current) =>
+      setOptimisticMessages((current) =>
         current.map((message) =>
           message.id === assistantId
             ? {
@@ -91,9 +122,10 @@ export function useAiCoach(initialMessages: ChatMessage[] = []) {
             : message,
         ),
       );
+      await refreshHistory();
     } catch (streamError) {
       if (abortController.signal.aborted) {
-        setMessages((current) =>
+        setOptimisticMessages((current) =>
           current.map((message) =>
             message.id === assistantId
               ? {
@@ -109,32 +141,34 @@ export function useAiCoach(initialMessages: ChatMessage[] = []) {
 
       if (!receivedChunk) {
         try {
-          const response = await getCoachAdvice({ message: text });
-          setMessages((current) =>
+          const response = await getCoachAdvice({ message: text, clientMessageId });
+          setOptimisticMessages((current) =>
             current.map((message) =>
               message.id === assistantId
                 ? { ...message, status: 'complete', text: response.advice }
                 : message,
             ),
           );
+          await refreshHistory();
           return;
         } catch (fallbackError) {
           const message = getApiErrorMessage(fallbackError);
           setError(message);
-          setMessages((current) =>
+          setOptimisticMessages((current) =>
             current.map((chatMessage) =>
               chatMessage.id === assistantId
                 ? { ...chatMessage, status: 'error', text: getFriendlyAiError(message) }
                 : chatMessage,
             ),
           );
+          await refreshHistory();
           return;
         }
       }
 
       const message = getApiErrorMessage(streamError);
       setError(message);
-      setMessages((current) =>
+      setOptimisticMessages((current) =>
         current.map((chatMessage) =>
           chatMessage.id === assistantId
             ? {
@@ -145,6 +179,7 @@ export function useAiCoach(initialMessages: ChatMessage[] = []) {
             : chatMessage,
         ),
       );
+      await refreshHistory();
     } finally {
       if (abortControllerRef.current === abortController) {
         abortControllerRef.current = null;
@@ -155,12 +190,34 @@ export function useAiCoach(initialMessages: ChatMessage[] = []) {
 
   return {
     messages,
+    isLoadingHistory: historyQuery.isLoading,
+    isHistoryError: historyQuery.isError,
     isStreaming,
     error,
     sendMessage,
     retryMessage,
+    refreshHistory,
     stopStreaming,
   };
+}
+
+function mapHistoryToChatMessages(history: CoachHistoryMessage[]): ChatMessage[] {
+  const userTextByTurnId = new Map(
+    history
+      .filter((message) => message.role === 'user')
+      .map((message) => [message.turnId, message.content]),
+  );
+
+  return history.map((message) => ({
+    id: message.id,
+    role: message.role,
+    text: message.content,
+    status: message.status,
+    sourceText:
+      message.role === 'assistant'
+        ? userTextByTurnId.get(message.turnId)
+        : undefined,
+  }));
 }
 
 function getFriendlyAiError(message: string) {

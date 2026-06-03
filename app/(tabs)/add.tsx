@@ -6,9 +6,11 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { getApiErrorMessage } from '@/api/axiosInstance';
+import { AppHeader } from '@/components/AppHeader';
 import { Button } from '@/components/Button';
 import { ExerciseRow } from '@/components/ExerciseRow';
 import { FormDatePickerField } from '@/components/FormDatePickerField';
+import { FormExerciseSelectField } from '@/components/FormExerciseSelectField';
 import { FormTextField } from '@/components/FormTextField';
 import { Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -26,7 +28,7 @@ interface AddWorkoutFormValues {
 
 const addWorkoutSchema: yup.ObjectSchema<AddWorkoutFormValues> = yup.object({
   date: yup.string().trim().required('Workout date is required.').test('valid-date', 'Select a valid workout date.', isValidWorkoutDate),
-  name: yup.string().trim().min(1, 'Exercise name is required.').max(120, 'Exercise name is too long.').required('Exercise name is required.'),
+  name: yup.string().trim().min(1, 'Select an exercise.').max(120, 'Exercise name is too long.').required('Select an exercise.'),
   sets: yup.string().required('Sets are required.').test('sets-range', 'Sets must be 1-100.', (value) => Number(value) >= 1 && Number(value) <= 100),
   reps: yup.string().required('Reps are required.').test('reps-range', 'Reps must be 1-1000.', (value) => Number(value) >= 1 && Number(value) <= 1000),
   weight: yup.string().required('Weight is required.').test('weight-range', 'Weight must be 0-1000.', (value) => Number(value) >= 0 && Number(value) <= 1000),
@@ -98,8 +100,7 @@ export default function AddWorkoutScreen() {
 
   return (
     <Screen>
-      <Text style={styles.title}>Add workout</Text>
-      <Text style={styles.subtitle}>Log the date and exercises from your training session.</Text>
+      <AppHeader title="Add workout" subtitle="Log the date and exercises from your training session." />
       <View style={styles.form}>
         <FormDatePickerField control={control} name="date" label="Date" />
         <Text style={styles.sectionTitle}>Exercises</Text>
@@ -124,7 +125,7 @@ export default function AddWorkoutScreen() {
           />
         ))}
         <View style={styles.inlineForm}>
-          <FormTextField control={control} name="name" label="Exercise" placeholder="Shoulder Press" containerStyle={styles.wideInput} />
+          <FormExerciseSelectField control={control} name="name" label="Exercise" placeholder="Select exercise" containerStyle={styles.wideInput} />
           <FormTextField control={control} name="sets" label="Sets" placeholder="4" keyboardType="numeric" containerStyle={styles.compactInput} />
         </View>
         <View style={styles.inlineForm}>
@@ -158,8 +159,6 @@ export default function AddWorkoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { color: colors.text, fontSize: 32, fontWeight: '900', letterSpacing: 0 },
-  subtitle: { color: colors.muted, fontSize: 14, lineHeight: 20, marginBottom: 20, marginTop: 6 },
   form: { gap: 14 },
   sectionTitle: { color: colors.text, fontSize: 18, fontWeight: '900', marginTop: 8 },
   inlineForm: { columnGap: 10, flexDirection: 'row', rowGap: 14 },

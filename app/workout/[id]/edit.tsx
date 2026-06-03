@@ -8,6 +8,7 @@ import { getApiErrorMessage } from '@/api/axiosInstance';
 import { Button } from '@/components/Button';
 import { ExerciseRow } from '@/components/ExerciseRow';
 import { FormDatePickerField } from '@/components/FormDatePickerField';
+import { FormExerciseSelectField } from '@/components/FormExerciseSelectField';
 import { FormTextField } from '@/components/FormTextField';
 import { Screen } from '@/components/Screen';
 import { colors } from '@/constants/theme';
@@ -132,7 +133,7 @@ export default function EditWorkoutScreen() {
             }}
           />
         ))}
-        <FormTextField control={control} name="name" label={editingExerciseIndex === null ? 'Add exercise' : 'Edit exercise'} placeholder="Cable Row" />
+        <FormExerciseSelectField control={control} name="name" label={editingExerciseIndex === null ? 'Add exercise' : 'Edit exercise'} placeholder="Select exercise" />
         <View style={styles.row}>
           <FormTextField control={control} name="sets" label="Sets" placeholder="3" keyboardType="numeric" containerStyle={styles.input} />
           <FormTextField control={control} name="reps" label="Reps" placeholder="12" keyboardType="numeric" containerStyle={styles.input} />

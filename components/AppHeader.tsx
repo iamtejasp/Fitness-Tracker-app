@@ -7,27 +7,27 @@ import { Logo } from './Logo';
 interface AppHeaderProps {
   title?: string;
   subtitle?: string;
-  showSettings?: boolean;
+  showProfile?: boolean;
 }
 
-export function AppHeader({ title, subtitle, showSettings = false }: AppHeaderProps) {
+export function AppHeader({ title, subtitle, showProfile = false }: AppHeaderProps) {
   return (
     <View style={styles.header}>
       {title ? (
-        <View>
+        <View style={styles.titleBlock}>
           <Text style={styles.title}>{title}</Text>
           {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         </View>
       ) : (
         <Logo size="sm" />
       )}
-      {showSettings ? (
+      {showProfile ? (
         <Link
-          accessibilityLabel="Open settings"
+          accessibilityLabel="Open profile"
           accessibilityRole="button"
-          href="/settings"
-          style={styles.settings}>
-          <Ionicons name="settings-outline" size={22} color={colors.text} />
+          href="/(tabs)/profile"
+          style={styles.profile}>
+          <Ionicons name="person-outline" size={22} color={colors.text} />
         </Link>
       ) : null}
     </View>
@@ -47,12 +47,16 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0,
   },
+  titleBlock: {
+    flex: 1,
+    minWidth: 0,
+  },
   subtitle: {
     color: colors.muted,
     fontSize: 14,
     marginTop: 4,
   },
-  settings: {
+  profile: {
     backgroundColor: colors.card,
     borderColor: colors.border,
     borderRadius: 14,

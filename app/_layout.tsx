@@ -1,4 +1,4 @@
-import { DarkTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -6,10 +6,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-import { AppSettingsProvider } from '@/context/AppSettingsContext';
+import { AppSettingsProvider, useAppSettings } from '@/context/AppSettingsContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { NetworkProvider, OfflineBanner } from '@/context/NetworkContext';
 import { ToastProvider } from '@/context/ToastContext';
+import { colors, getThemePalette } from '@/constants/theme';
 import { queryClient } from '@/lib/queryClient';
 
 export { ErrorBoundary } from 'expo-router';
@@ -44,29 +45,52 @@ export default function RootLayout() {
       <NetworkProvider>
         <ToastProvider>
           <AppSettingsProvider>
-            <AuthProvider>
-              <ThemeProvider value={DarkTheme}>
-                <StatusBar style="light" />
-                <OfflineBanner />
-                <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#080B10' } }}>
-                  <Stack.Screen name="index" />
-                  <Stack.Screen name="onboarding" />
-                  <Stack.Screen name="login" />
-                  <Stack.Screen name="register" />
-                  <Stack.Screen name="forgot-password" />
-                  <Stack.Screen name="verify-reset-otp" />
-                  <Stack.Screen name="reset-password" />
-                  <Stack.Screen name="(tabs)" />
-                  <Stack.Screen name="workout/[id]" />
-                  <Stack.Screen name="workout/[id]/edit" />
-                  <Stack.Screen name="profile/edit" />
-                  <Stack.Screen name="settings" />
-                </Stack>
-              </ThemeProvider>
-            </AuthProvider>
+            <ThemedAppShell />
           </AppSettingsProvider>
         </ToastProvider>
       </NetworkProvider>
     </QueryClientProvider>
+  );
+}
+
+function ThemedAppShell() {
+  const settings = useAppSettings();
+  const palette = getThemePalette(settings.theme);
+  const navigationBaseTheme = palette.mode === 'light' ? DefaultTheme : DarkTheme;
+  const navigationTheme = {
+    ...navigationBaseTheme,
+    dark: palette.mode === 'dark',
+    colors: {
+      ...navigationBaseTheme.colors,
+      primary: palette.primary,
+      background: palette.background,
+      card: palette.card,
+      text: palette.text,
+      border: palette.border,
+      notification: palette.coral,
+    },
+  };
+
+  return (
+    <AuthProvider>
+      <ThemeProvider value={navigationTheme}>
+        <StatusBar style={palette.mode === 'light' ? 'dark' : 'light'} />
+        <OfflineBanner />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="register" />
+          <Stack.Screen name="forgot-password" />
+          <Stack.Screen name="verify-reset-otp" />
+          <Stack.Screen name="reset-password" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="workout/[id]" />
+          <Stack.Screen name="workout/[id]/edit" />
+          <Stack.Screen name="profile/edit" />
+          <Stack.Screen name="settings" />
+        </Stack>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
